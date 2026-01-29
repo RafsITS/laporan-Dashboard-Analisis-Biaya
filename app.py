@@ -202,6 +202,7 @@ def load_and_process_data(file_path=None):
 
         df.columns = df.columns.str.strip()
         df = df.dropna(subset=['Total Biaya', 'Nopol', 'Bulan', 'Tahun', 'Keterangan'])
+        df = df.drop_duplicates(subset=['Tahun','Total Biaya'])
         df['Bulan'] = df['Bulan'].str.strip().str.capitalize()
         df['Keterangan'] = df['Keterangan'].str.strip().str.upper()
         df['Nopol'] = df['Nopol'].str.strip().str.upper()
@@ -415,12 +416,14 @@ def main():
         <div style='text-align: center; padding: 20px;'>
             <h1 style='font-size: 3em; animation: float 3s ease-in-out infinite;'>🚗</h1>
             <h2 class='neon-text'>Dashboard Analisis</h2>
-            <p style='font-size: 0.9em; opacity: 0.8;'>Pemeliharaan Kendaraan</p>
+            <p style='font-size: 0.9em; opacity: 0.8;'>Pemeliharaan Kendaraan </p>
+            <p style='font-size: 0.8em; opacity: 1; text-align: justify;'>Badan Pengelolaan Keuangan dan Aset Daerah Kota Surabaya</p>
         </div>
-        """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)    
         st.markdown("---")
+
         
-        uploaded_file = st.file_uploader("Upload CSV", type=['csv'])
+        uploaded_file = st.file_uploader("📁 Upload CSV", type=['csv'])
         page = st.radio("Menu Navigasi", ["Dashboard Utama", "Analisis Detail", "Deteksi Anomali", "Laporan Audit"])
         
         if uploaded_file:
@@ -538,7 +541,7 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         
-        tab1, tab2, tab3, tab4 = st.tabs(["📅 Temporal", "🏢 Vendor", "🚗 Kendaraan", "📊 Kategori"])
+        tab1, tab2, tab3, tab4 = st.tabs(["📅 ****Temporal****", "🏢 ****Vendor****", "🚗 ****Kendaraan****", "📊 ****Kategori****"])
         
         with tab1:
             render_chart_card("Heatmap Pengeluaran Bulanan", create_monthly_heatmap(df), height=500)
@@ -634,7 +637,7 @@ def main():
             </div>
             """, unsafe_allow_html=True)
 
-        t1, t2, t3 = st.tabs(["Biaya Ekstrim", "Logika Kategori", "Duplikasi"])
+        t1, t2, t3 = st.tabs([" ****Biaya Ekstrim****", "****Logika Kategori****", "****Duplikasi****"])
         
         with t1:
             if not cost_anom.empty:
@@ -648,14 +651,16 @@ def main():
                 )
                 render_chart_card("Scatter Plot Anomali", fig)
                 # UPDATE: SORT BY TOTAL BIAYA DESCENDING
-                st.dataframe(cost_anom.sort_values(by='Total Biaya', ascending=False)[['Tahun', 'Bulan', 'Nopol', 'Total Biaya', 'Batas_Wajar', 'Keterangan']].style.format({'Total Biaya': 'Rp {:,.0f}', 'Batas_Wajar': 'Rp {:,.0f}'}), use_container_width=True)
-            else: st.success("Tidak ada anomali biaya.")
+                st.markdown("#### Tabel Anomali Biaya Ekstrim")
+                st.dataframe(cost_anom.sort_values(by='Total Biaya', ascending=False)[['Tahun', 'Bulan', 'Type', 'Nopol', 'Total Biaya', 'Batas_Wajar', 'Keterangan']].style.format({'Total Biaya': 'Rp {:,.0f}', 'Batas_Wajar': 'Rp {:,.0f}'}), use_container_width=True)
+            else:
+                st.success("Tidak ada anomali biaya.")
             
         with t2:
             if not logic_anom.empty:
                 st.warning(f"Ditemukan {len(logic_anom)} transaksi 'RINGAN' tapi biayanya tinggi.")
                 # UPDATE: SORT BY TOTAL BIAYA DESCENDING
-                st.dataframe(logic_anom.sort_values(by='Total Biaya', ascending=False)[['Tahun', 'Nopol', 'Total Biaya', 'Keterangan']].style.format({'Total Biaya': 'Rp {:,.0f}'}), use_container_width=True)
+                st.dataframe(logic_anom.sort_values(by='Total Biaya', ascending=False)[['Tahun','Type','Nopol', 'Total Biaya', 'Keterangan']].style.format({'Total Biaya': 'Rp {:,.0f}'}), use_container_width=True)
             else: st.success("Logika kategori konsisten.")
             
         with t3:
