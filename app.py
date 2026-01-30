@@ -3,9 +3,8 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-import time
 import base64
-import os
+import time
 
 # ==========================================
 # PAGE CONFIGURATION
@@ -27,64 +26,112 @@ def get_image_as_base64(image_path):
             return base64.b64encode(img_file.read()).decode()
     except FileNotFoundError:
         return None
-# CUSTOM CSS STYLING (HYBRID & THEME AWARE)
+
+# ==========================================
+# CUSTOM CSS STYLING (THEME AWARE & HIGH CONTRAST)
 # ==========================================
 def load_custom_css():
     st.markdown("""
     <style>
     /* Import Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
-
-    /* Global Settings */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
+    
+    /* Global Styles */
     * { font-family: 'Poppins', sans-serif; }
+    
+    /* Sidebar Styling */
+    [data-testid="stSidebar"] {
+        background-color: var(--secondary-background-color);
+        border-right: 1px solid rgba(128,128,128,0.2);
+    }
+    
+    [data-testid="stSidebar"] .block-container {
+        padding-bottom: 100px; 
+    }
 
-    /* --- CHART CARD CONTAINER (Template Baru) --- */
-    .chart-card {
+    /* --- KP IDENTITY HEADER (KOTAK PUTIH ATAS) --- */
+    .kp-header-container {
         background-color: var(--secondary-background-color);
         border-radius: 15px;
+        padding: 20px 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        border: 1px solid rgba(128,128,128,0.2);
+        display: flex;
+        align-items: center;
+        gap: 25px;
         margin-bottom: 25px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(128, 128, 128, 0.1);
-        overflow: hidden;
+        animation: slideInDown 0.8s ease-out;
     }
 
-    /* Header Chart */
-    .chart-header {
-        background-color: var(--background-color);
-        padding: 15px 20px;
-        border-left: 6px solid #667eea;
-        border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+    .kp-logo-section { flex-shrink: 0; }
+    .kp-logo-section img { max-height: 80px; width: auto; }
+
+    .kp-text-section {
+        border-left: 3px solid #667eea;
+        padding-left: 25px;
+        flex-grow: 1;
     }
 
-    .chart-header-title {
-        margin: 0;
-        font-size: 1.1rem;
+    .kp-subtitle {
+        font-size: 0.85em;
         font-weight: 700;
-        color: var(--text-color);
+        color: #667eea;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
+        margin-bottom: 5px;
     }
 
-    .chart-body {
-        padding: 10px;
+    .kp-name {
+        font-size: 1.1em;
+        font-weight: 600;
+        margin: 2px 0;
+        color: var(--text-color);
     }
 
-    /* --- METRIC CARDS --- */
+    /* --- MAIN DASHBOARD HEADER --- */
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 35px;
+        border-radius: 20px;
+        text-align: center;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        color: white;
+        animation: slideInUp 0.8s ease-out;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 2.5em;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .dashboard-header p {
+        font-size: 1.1em;
+        opacity: 0.9;
+        margin-top: 10px;
+    }
+
+    /* Metric Card Styling */
     .metric-card {
-        background: linear-gradient(135deg, var(--secondary-background-color) 0%, var(--background-color) 100%);
-        padding: 25px;
+        background-color: var(--secondary-background-color);
+        padding: 20px;
         border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border: 1px solid rgba(128, 128, 128, 0.1);
         border-left: 5px solid #667eea;
         transition: transform 0.3s ease;
-        text-align: center;
-        margin-bottom: 20px;
-        border: 1px solid rgba(128, 128, 128, 0.1);
+        margin-bottom: 15px;
     }
-    .metric-card:hover { transform: translateY(-5px); }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    }
     
     .metric-value {
-        font-size: 2.5em;
+        font-size: 2em;
         font-weight: 800;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         -webkit-background-clip: text;
@@ -94,97 +141,94 @@ def load_custom_css():
     
     .metric-label {
         color: var(--text-color);
-        font-size: 0.9em;
+        opacity: 0.8;
+        font-size: 0.85em;
         text-transform: uppercase;
         font-weight: 600;
-        opacity: 0.8;
+        letter-spacing: 1px;
     }
 
-    /* --- ANIMATIONS --- */
-    @keyframes slideInLeft { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    /* Chart Container */
+    .chart-container {
+        background-color: var(--secondary-background-color);
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 25px;
+        border: 1px solid rgba(128, 128, 128, 0.1);
+    }
 
-    .slide-left { animation: slideInLeft 0.8s ease-out; }
-    .slide-right { animation: slideInRight 0.8s ease-out; }
-    .fade-up { animation: fadeInUp 0.8s ease-out; }
-
-    /* --- ALERTS & BOXES --- */
+    /* Alert Boxes */
     .alert-box {
         padding: 20px;
-        border-radius: 12px;
+        border-radius: 15px;
         margin: 15px 0;
-        color: white; 
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        color: white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
     .alert-danger { background: linear-gradient(135deg, #ef5350 0%, #e53935 100%); }
     .alert-warning { background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%); }
-    .alert-success { background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%); }
     .alert-info { background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%); }
+    .alert-success { background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%); }
 
-    /* --- INFO BOX --- */
-    .info-box {
-        background-color: var(--secondary-background-color);
-        padding: 20px;
-        border-radius: 15px;
-        border-left: 5px solid #764ba2;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
-    }
-
-    /* --- VEHICLE CARD --- */
-    .vehicle-card {
-        background-color: var(--secondary-background-color);
-        padding: 15px;
+    /* SIDEBAR INFO CARDS (SOLID COLOR) */
+    .sidebar-card {
+        background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
         border-radius: 12px;
-        margin: 10px 0;
-        border-left: 4px solid #667eea;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    /* --- SIDEBAR DECORATION --- */
-    .neon-text {
-        font-weight: 700;
-        color: var(--text-color); 
-        text-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
-    }
-
-    /* --- HEADER UTAMA --- */
-    .main-header-container {
+        padding: 15px;
+        margin-bottom: 10px;
         text-align: center;
-        padding: 40px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 20px;
-        color: white;
-        margin-bottom: 30px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        color: white !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.2);
     }
-    .main-header-container h1 { color: white !important; }
-    .main-header-container p { color: rgba(255,255,255,0.9) !important; }
+    
+    .sidebar-value {
+        font-size: 1.6rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+        color: white !important;
+    }
+    
+    .sidebar-label {
+        font-size: 0.8rem;
+        opacity: 0.9;
+        font-weight: 500;
+        color: white !important;
+    }
 
-    /* --- KP IDENTITY --- */
-    .kp-container {
-        display: flex;
-        align-items: center;
-        background: var(--secondary-background-color);
-        padding: 15px 25px;
-        border-radius: 15px;
-        border: 1px solid rgba(128,128,128,0.2);
-        margin-bottom: 25px;
+    /* Section Header */
+    .section-header {
+        color: var(--text-color);
+        font-size: 1.4em;
+        font-weight: 700;
+        margin: 25px 0 15px 0;
+        border-left: 5px solid #667eea;
+        padding-left: 10px;
     }
-    .kp-names {
-        margin-left: 20px;
-        border-left: 3px solid #667eea;
-        padding-left: 20px;
+    
+    /* Footer */
+    .footer {
+        text-align: center;
+        padding: 30px;
+        margin-top: 50px;
+        opacity: 0.7;
+        border-top: 1px solid rgba(128,128,128,0.2);
     }
-    .kp-title { font-weight: bold; font-size: 0.9em; opacity: 0.7; letter-spacing: 1px; text-transform: uppercase; }
-    .kp-name-text { font-size: 1.1em; font-weight: 600; margin: 2px 0; }
-
-    /* Hide default Streamlit anchors */
+    
+    /* Animations */
+    @keyframes slideInDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes slideInUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes slideInLeft { from { transform: translateX(-50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slideInRight { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    
+    .slide-left { animation: slideInLeft 0.6s ease-out; }
+    .slide-right { animation: slideInRight 0.6s ease-out; }
+    
+    /* Hide Streamlit Elements */
     .css-15zrgzn {display: none}
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
@@ -231,33 +275,32 @@ def load_and_process_data(file_path=None):
     except Exception as e: return None, f"Error: {str(e)}"
 
 # ==========================================
-# HELPER: RENDER CHART WITH HEADER
+# CHART HELPER (RESPONSIVE)
 # ==========================================
 def render_chart_card(title, fig, height=450):
     if fig:
-        # Force remove title from Plotly object to avoid duplication/undefined
         fig.update_layout(
             title_text="",
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             font=dict(family='Poppins'),
-            margin=dict(l=20, r=20, t=20, b=20),
+            margin=dict(l=40, r=40, t=20, b=40),
             height=height,
-            xaxis=dict(showgrid=False),
-            yaxis=dict(showgrid=True, gridcolor='rgba(128, 128, 128, 0.2)')
+            xaxis=dict(showgrid=False, zeroline=False),
+            yaxis=dict(showgrid=True, gridcolor='rgba(128, 128, 128, 0.1)', zeroline=False),
+            legend=dict(font=dict(family='Poppins'))
         )
         st.markdown(f"""
-        <div class="chart-card fade-up">
-            <div class="chart-header">
-                <h3 class="chart-header-title">{title}</h3>
+        <div class="chart-container">
+            <div style="font-weight: 700; font-size: 1.1em; margin-bottom: 15px; text-transform: uppercase; border-bottom: 2px solid rgba(128,128,128,0.1); padding-bottom: 10px;">
+                {title}
             </div>
-            <div class="chart-body">
         """, unsafe_allow_html=True)
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown("</div></div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
-# ANALYSIS & CHART FUNCTIONS
+# ANALYSIS FUNCTIONS
 # ==========================================
 def calculate_yearly_summary(df):
     summary = df.groupby('Tahun').agg({'Total Biaya': ['sum', 'mean', 'count']}).round(0)
@@ -298,7 +341,6 @@ def detect_logic_anomalies(df):
     return df[(df['Keterangan'].str.contains('RINGAN', na=False)) & (df['Total Biaya'] > benchmark)]
 
 def detect_duplicates(df):
-    # Hanya mengecek duplikasi berdasarkan kolom inti
     return df[df.duplicated(subset=['Bulan', 'Tahun', 'Nopol', 'Total Biaya', 'Vendor_Clean'], keep=False)]
 
 # --- Chart Creators ---
@@ -306,13 +348,15 @@ def create_yearly_trend_chart(summary_df):
     if summary_df.empty: return None
     fig = go.Figure()
     years = summary_df.index.tolist(); costs = summary_df['Total_Pengeluaran'].tolist()
-    fig.add_trace(go.Bar(
-        x=years, y=costs,
-        marker=dict(color=costs, colorscale='Blues', showscale=False),
-        text=[f'Rp {val:,.0f}' for val in costs], textposition='outside',
+    fig.add_trace(go.Scatter(
+        x=years, y=costs, mode='lines+markers',
+        line=dict(color='#667eea', width=3),
+        marker=dict(size=10, color='#764ba2'),
+        fill='tozeroy', fillcolor='rgba(102, 126, 234, 0.2)',
+        text=[f'Rp {val:,.0f}' for val in costs], textposition='top center',
         hovertemplate='<b>Tahun %{x}</b><br>Total: Rp %{y:,.0f}<extra></extra>'
     ))
-    fig.update_layout(title_text="", xaxis_title="Tahun", yaxis_title="Total Pengeluaran (Rp)")
+    fig.update_layout(yaxis=dict(range=[0, max(costs) * 1.2]))
     return fig
 
 def create_vendor_pie_chart(vendor_df):
@@ -321,10 +365,9 @@ def create_vendor_pie_chart(vendor_df):
     values = vendor_df.values[:8].tolist() + [vendor_df.values[8:].sum()] if len(vendor_df) > 8 else vendor_df.values.tolist()
     fig = go.Figure(data=[go.Pie(
         labels=labels, values=values, hole=0.4,
-        marker=dict(colors=px.colors.qualitative.Set3, line=dict(color='white', width=1)),
+        marker=dict(colors=px.colors.qualitative.Set3, line=dict(color='white', width=2)),
         textinfo='percent', hovertemplate='<b>%{label}</b><br>Rp %{value:,.0f}<extra></extra>'
     )])
-    fig.update_layout(title_text="", legend=dict(orientation="v", yanchor="middle", y=0.5))
     return fig
 
 def create_timeline_chart(monthly_df):
@@ -338,7 +381,6 @@ def create_timeline_chart(monthly_df):
         marker=dict(size=8, color='#764ba2'), fill='tozeroy', fillcolor='rgba(102, 126, 234, 0.2)',
         hovertemplate='<b>%{x|%B %Y}</b><br>Rp %{y:,.0f}<extra></extra>'
     ))
-    fig.update_layout(title_text="")
     return fig
 
 def create_monthly_heatmap(df):
@@ -351,34 +393,37 @@ def create_monthly_heatmap(df):
         texttemplate='%{text}', textfont={"size": 10},
         hovertemplate='<b>%{y} %{x}</b><br>Rp %{z:,.0f}<extra></extra>'
     ))
-    fig.update_layout(title_text="")
     return fig
 
 def create_box_plot(df):
-    # Set title=None explicit
     fig = px.box(df, x='Tahun', y='Total Biaya', color='Tahun', color_discrete_sequence=px.colors.qualitative.Set2, title=None)
-    fig.update_layout(title_text="", showlegend=False)
+    fig.update_layout(showlegend=False)
     return fig
 
 def create_vendor_comparison_chart(vendor_df, top_n=10):
     top = vendor_df.head(top_n)
+    max_val = top.values.max()
     fig = go.Figure(data=[go.Bar(
         y=top.index, x=top.values, orientation='h',
         marker=dict(color=top.values, colorscale='Plasma', showscale=False),
-        text=[f'Rp {val:,.0f}' for val in top.values], textposition='outside',
+        text=[f'Rp {val:,.0f}' for val in top.values], 
+        textposition='outside', cliponaxis=False,
         hovertemplate='<b>%{y}</b><br>Rp %{x:,.0f}<extra></extra>'
     )])
-    fig.update_layout(title_text="", yaxis=dict(autorange="reversed"))
+    fig.update_layout(
+        yaxis=dict(autorange="reversed", automargin=True),
+        xaxis=dict(showgrid=True, gridcolor='rgba(128, 128, 128, 0.1)', zeroline=False, range=[0, max_val * 1.4]),
+        margin=dict(r=50)
+    )
     return fig
 
 def create_scatter_plot(df):
     stats = df.groupby('Nopol').agg({'Total Biaya': 'sum', 'Bulan': 'count', 'Type': 'first'}).reset_index()
-    # Set title=None explicit
     fig = px.scatter(
         stats, x='Bulan', y='Total Biaya', hover_data=['Nopol', 'Type'], color='Type',
         size='Total Biaya', color_discrete_sequence=px.colors.qualitative.Vivid, title=None
     )
-    fig.update_layout(title_text="", xaxis_title="Frekuensi Servis", yaxis_title="Total Biaya (Rp)")
+    fig.update_layout(xaxis_title="Frekuensi Servis", yaxis_title="Total Biaya (Rp)")
     return fig
 
 def create_type_distribution_chart(type_stats):
@@ -391,18 +436,50 @@ def create_type_distribution_chart(type_stats):
         textinfo='percent',
         hovertemplate='<b>%{label}</b><br>Rp %{value:,.0f}<extra></extra>'
     )])
-    fig.update_layout(title_text="")
     return fig
 
 def create_category_chart(category_df):
+    max_val = category_df['sum'].max()
     fig = go.Figure(data=[go.Bar(
         y=category_df.index, x=category_df['sum'], orientation='h',
         marker=dict(color=category_df['sum'], colorscale='Viridis', showscale=False),
-        text=[f'Rp {val:,.0f}' for val in category_df['sum']], textposition='outside',
+        text=[f'Rp {val:,.0f}' for val in category_df['sum']], 
+        textposition='outside', cliponaxis=False,
         hovertemplate='<b>%{y}</b><br>Rp %{x:,.0f}<extra></extra>'
     )])
-    fig.update_layout(title_text="", yaxis=dict(autorange="reversed"))
+    fig.update_layout(
+        yaxis=dict(autorange="reversed", automargin=True),
+        xaxis=dict(showgrid=True, gridcolor='rgba(128, 128, 128, 0.1)', range=[0, max_val * 1.4]),
+        margin=dict(r=50)
+    )
     return fig
+
+def render_footer():
+    sby_logo = get_image_as_base64('SBY.png') or ''
+    its_logo = get_image_as_base64('ITS.png') or ''
+    
+    st.markdown("""
+    <div class="footer">
+        <div style='display: flex; justify-content: center; align-items: center; gap: 40px; margin-bottom: 20px;'>
+            <div style='text-align: center;'>
+                {sby_logo_html}
+                <div style="font-size: 0.7em; font-weight: bold; margin-top: 5px; color: var(--text-color);">PEMERINTAH<br>KOTA SURABAYA</div>
+            </div>
+            <div style='text-align: center;'>
+                {its_logo_html}
+            </div>
+        </div>
+        <div style='font-size: 0.8em; opacity: 0.8;'>
+            <b>Dashboard Analisis Biaya Pemeliharaan Kendaraan</b><br>
+            Badan Pengelolaan Keuangan dan Aset Daerah Kota Surabaya<br>
+            <span style='opacity: 0.7;'>Kerja Praktik Institut Teknologi Sepuluh Nopember</span>
+        </div>
+        <div style="font-size: 0.7em; margin-top: 20px; opacity: 0.5;">© 2025 - Analisis Biaya Kendaraan</div>
+    </div>
+    """.format(
+        sby_logo_html=f'<img src="data:image/png;base64,{sby_logo}" width="60">' if sby_logo else '',
+        its_logo_html=f'<img src="data:image/png;base64,{its_logo}" width="100">' if its_logo else ''
+    ), unsafe_allow_html=True)
 
 # ==========================================
 # MAIN APPLICATION
@@ -413,18 +490,15 @@ def main():
     # --- SIDEBAR ---
     with st.sidebar:
         st.markdown("""
-        <div style='text-align: center; padding: 20px;'>
-            <h1 style='font-size: 3em; animation: float 3s ease-in-out infinite;'>🚗</h1>
-            <h2 class='neon-text'>Dashboard Analisis</h2>
-            <p style='font-size: 0.9em; opacity: 0.8;'>Pemeliharaan Kendaraan </p>
-            <p style='font-size: 0.8em; opacity: 1; text-align: justify;'>Badan Pengelolaan Keuangan dan Aset Daerah Kota Surabaya</p>
+        <div style='text-align: center; padding: 10px;'>
+            <h1 style='font-size: 3em; margin: 0;'>🚗</h1>
+            <h3 style='margin: 0; font-weight:700;'>Dashboard<br>Analisis</h3>
         </div>
-        """, unsafe_allow_html=True)    
-        st.markdown("---")
-
+        <hr style="border-top: 1px solid rgba(128,128,128,0.2);">
+        """, unsafe_allow_html=True)
         
         uploaded_file = st.file_uploader("📁 Upload CSV", type=['csv'])
-        page = st.radio("Menu Navigasi", ["Dashboard Utama", "Analisis Detail", "Deteksi Anomali", "Laporan Audit"])
+        page = st.radio("Navigasi", ["Dashboard Utama", "Analisis Detail", "Deteksi Anomali", "Laporan Audit"])
         
         if uploaded_file:
             df, error = load_and_process_data(uploaded_file)
@@ -435,9 +509,41 @@ def main():
             st.error(error); st.stop()
         if df is None:
             st.warning("⚠️ Data belum dimuat."); st.stop()
-            
-        st.markdown("---")
+
+        # SIDEBAR INFO
+        total_trx = len(df)
+        min_tahun = int(df['Tahun'].min())
+        max_tahun = int(df['Tahun'].max())
+        periode_str = str(min_tahun) if min_tahun == max_tahun else f"{min_tahun}–{max_tahun}"
+        total_unit = df['Nopol'].nunique()
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<div style='font-weight:700; margin-bottom:10px;'>ℹ️ Info Dataset</div>", unsafe_allow_html=True)
+        
+        st.markdown(f"""
+        <div class="sidebar-card">
+            <div class="sidebar-value">{total_trx:,}</div>
+            <div class="sidebar-label">Total Transaksi</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown(f"""
+        <div class="sidebar-card">
+            <div class="sidebar-value">{periode_str}</div>
+            <div class="sidebar-label">Periode Data</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown(f"""
+        <div class="sidebar-card">
+            <div class="sidebar-value">{total_unit}</div>
+            <div class="sidebar-label">Jumlah Kendaraan</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("<hr style='border-top: 1px solid rgba(128,128,128,0.2);'>", unsafe_allow_html=True)
         st.subheader("Filter Data")
+        
         years = sorted(df['Tahun'].unique())
         selected_years = st.multiselect("Tahun", years, default=years)
         if selected_years: df = df[df['Tahun'].isin(selected_years)]
@@ -446,47 +552,41 @@ def main():
         selected_vendor = st.selectbox("Vendor", vendors)
         if selected_vendor != 'Semua': df = df[df['Vendor_Clean'] == selected_vendor]
 
-        st.markdown(f"""
-        <div style='background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-top: 20px; text-align: center;'>
-            <div style='font-size: 1.5em; font-weight: bold;'>{len(df):,}</div>
-            <div style='font-size: 0.8em;'>Total Transaksi</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.caption(f"Menampilkan: {len(df):,} baris")
 
-    # --- HALAMAN UTAMA ---
+    # --- DASHBOARD UTAMA ---
     if page == "Dashboard Utama":
-        # IDENTITY SECTION (LOGO & NAMES)
+        # 1. IDENTITAS HEADER
         logo_base64 = get_image_as_base64("bpkad.png")
-        logo_html = f'<img src="data:image/png;base64,{logo_base64}" width="300" alt="Logo Surabaya">' if logo_base64 else '<div style="width: 150px; height: 150px; background: #ccc;"></div>'
-        
+        logo_html = f'<img src="data:image/png;base64,{logo_base64}">' if logo_base64 else ''
         st.markdown(f"""
-        <div class="kp-container fade-up">
-            <div style="flex-shrink: 0;">
-                {logo_html}
-            </div>
-            <div class="kp-names">
-                <div class="kp-title">KERJA PRAKTIK - BPKAD KOTA SURABAYA</div>
-                <div class="kp-name-text">Rafi Satrio Pratama - 5052231007</div>
-                <div class="kp-name-text">Rahardian Putra - 5052231018</div>
+        <div class="kp-header-container">
+            <div class="kp-logo-section">{logo_html}</div>
+            <div class="kp-text-section">
+                <div class="kp-subtitle">KERJA PRAKTIK - BPKAD KOTA SURABAYA</div>
+                <div class="kp-name">Rafi Satrio Pratama - 5052231007</div>
+                <div class="kp-name">Rahardian Putra - 5052231018</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
+        # 2. DASHBOARD HEADER
         st.markdown("""
-        <div class="main-header-container fade-up">
+        <div class="dashboard-header">
             <h1>🚗 Dashboard Analisis Biaya</h1>
-            <p>Monitoring dan Analisis Komprehensif</p>
+            <p>Monitoring & Evaluasi Pemeliharaan Kendaraan Dinas</p>
         </div>
         """, unsafe_allow_html=True)
         
-        st.markdown("### 📊 Ringkasan Eksekutif")
+        st.markdown("<div class='section-header'>📊 Ringkasan Eksekutif</div>", unsafe_allow_html=True)
+        
         c1, c2, c3, c4 = st.columns(4)
         
         metrics = [
             ("💰 Total Pengeluaran", f"{df['Total Biaya'].sum()/1e9:,.1f} M", "Rupiah"),
             ("📈 Rata-rata Biaya", f"{df['Total Biaya'].mean()/1e6:,.1f} Jt", "Per Transaksi"),
-            ("📋 Total Transaksi", f"{len(df):,}", "Transaksi"),
-            ("🚗 Jumlah Unit", f"{df['Nopol'].nunique()}", "Kendaraan")
+            ("📋 Total Transaksi", f"{len(df):,}", "Service Record"),
+            ("🚗 Jumlah Unit", f"{df['Nopol'].nunique()}", "Kendaraan Aktif")
         ]
         
         for col, (label, val, sub) in zip([c1, c2, c3, c4], metrics):
@@ -499,92 +599,101 @@ def main():
                 </div>
                 """, unsafe_allow_html=True)
 
+        monthly_trend = calculate_monthly_trend(df)
+        render_chart_card("Timeline Pengeluaran Bulanan", create_timeline_chart(monthly_trend))
+        
         c1, c2 = st.columns(2)
         with c1:
-            summary = calculate_yearly_summary(df)
-            render_chart_card("Tren Pengeluaran Tahunan", create_yearly_trend_chart(summary))
+            st.markdown("""
+                        <div class="chart-container">
+                            <div style="font-weight: 700; font-size: 1.1em; margin-bottom: 15px; text-transform: uppercase; border-bottom: 2px solid rgba(128,128,128,0.1); padding-bottom: 10px;">
+                                🏆 10 Kendaraan Biaya Tertinggi
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+            top_units = get_top_units(df, 10)
+
+            if not top_units.empty:
+                display_units = top_units.reset_index().copy()
+                display_units.index = display_units.index + 1
+                display_units.columns = ['Nopol', 'Tipe', 'Total Biaya', 'Frekuensi']
+            
+            st.dataframe(
+                display_units.style
+                .format({'Total Biaya': 'Rp {:,.0f}', 'Frekuensi': '{:.0f}x'})
+                .background_gradient(subset=['Total Biaya'], cmap='Reds'),
+                use_container_width=True
+            )
         with c2:
             vendors = get_top_vendors(df)
             render_chart_card("Distribusi Vendor Utama", create_vendor_pie_chart(vendors))
 
-        monthly_trend = calculate_monthly_trend(df)
-        render_chart_card("Timeline Pengeluaran Bulanan", create_timeline_chart(monthly_trend))
+  
         
-        st.markdown("### 🏆 10 Kendaraan Termahal")
-        top_units = get_top_units(df, 10)
+    
         
-        if not top_units.empty:
-            for idx, ((nopol, vtype), row) in enumerate(top_units.iterrows(), 1):
-                badge_color = "#ffd700" if idx == 1 else "#c0c0c0" if idx == 2 else "#cd7f32" if idx == 3 else "#667eea"
-                st.markdown(f"""
-                <div class="vehicle-card slide-right" style="animation-delay: {idx*0.1}s;">
-                    <div style="display: flex; align-items: center;">
-                        <div style="background: {badge_color}; color: #333; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; margin-right: 15px;">#{idx}</div>
-                        <div>
-                            <div style="font-weight: 700; font-size: 1.1em; color: var(--text-color);">{nopol}</div>
-                            <div style="font-size: 0.85em; opacity: 0.7; color: var(--text-color);">{vtype}</div>
-                        </div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-weight: 800; font-size: 1.2em; color: #667eea;">Rp {row['Total_Biaya']:,.0f}</div>
-                        <div style="font-size: 0.8em; opacity: 0.7; color: var(--text-color);">{int(row['Frekuensi_Servis'])}x Servis</div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+        
 
     # --- ANALISIS DETAIL ---
     elif page == "Analisis Detail":
         st.markdown("""
-        <div class="main-header-container fade-up">
-            <h1>📈 Analisis Detail</h1>
+        <div class="dashboard-header" style="padding: 20px; margin-bottom: 20px;">
+            <h1 style="font-size: 2em;">📈 Analisis Detail</h1>
             <p>Eksplorasi Data Mendalam</p>
         </div>
         """, unsafe_allow_html=True)
         
-        tab1, tab2, tab3, tab4 = st.tabs(["📅 ****Temporal****", "🏢 ****Vendor****", "🚗 ****Kendaraan****", "📊 ****Kategori****"])
+        tab1, tab2, tab3, tab4 = st.tabs(["📅 Temporal", "🏢 Vendor", "🚗 Kendaraan", "📊 Kategori"])
         
         with tab1:
             render_chart_card("Heatmap Pengeluaran Bulanan", create_monthly_heatmap(df), height=500)
             
             c1, c2 = st.columns(2)
             with c1:
-                render_chart_card("Distribusi Biaya per Tahun (Box Plot)", create_box_plot(df))
+                render_chart_card("Distribusi Biaya per Tahun", create_box_plot(df))
             with c2:
                 monthly_data = calculate_monthly_trend(df)
                 if not monthly_data.empty:
                     max_month = monthly_data.loc[monthly_data['Total Biaya'].idxmax()]
                     min_month = monthly_data.loc[monthly_data['Total Biaya'].idxmin()]
+                    
                     st.markdown(f"""
-                    <div class="info-box fade-up">
-                        <h4 style="margin:0; color:var(--text-color);">📊 Insight Temporal</h4>
-                        <hr style="margin: 10px 0; opacity: 0.2;">
-                        <div style="margin-bottom: 15px;">
-                            <div style="font-weight: bold; color: #e74c3c;">🔝 Bulan Termahal</div>
-                            <div style="font-size: 1.2em;">{max_month['Bulan']} {int(max_month['Tahun'])}</div>
-                            <div style="font-weight: 800;">Rp {max_month['Total Biaya']:,.0f}</div>
-                        </div>
-                        <div>
-                            <div style="font-weight: bold; color: #27ae60;">📉 Bulan Termurah</div>
-                            <div style="font-size: 1.2em;">{min_month['Bulan']} {int(min_month['Tahun'])}</div>
-                            <div style="font-weight: 800;">Rp {min_month['Total Biaya']:,.0f}</div>
-                        </div>
+                    <div class="alert-box alert-danger">
+                        <h4 style="margin:0;">🔝 Bulan Termahal</h4>
+                        <div style="font-size: 1.2em; margin-top:5px;">{max_month['Bulan']} {int(max_month['Tahun'])}</div>
+                        <div style="font-size: 1.5em; font-weight: 800;">Rp {max_month['Total Biaya']:,.0f}</div>
+                    </div>
+                    <div class="alert-box alert-success">
+                        <h4 style="margin:0;">📉 Bulan Termurah</h4>
+                        <div style="font-size: 1.2em; margin-top:5px;">{min_month['Bulan']} {int(min_month['Tahun'])}</div>
+                        <div style="font-size: 1.5em; font-weight: 800;">Rp {min_month['Total Biaya']:,.0f}</div>
                     </div>
                     """, unsafe_allow_html=True)
 
         with tab2:
             c1, c2 = st.columns([2,1])
             with c1:
-                render_chart_card("Top 15 Vendor", create_vendor_comparison_chart(get_top_vendors(df, 15), 15), height=600)
+                render_chart_card("Peringkat Pengeluaran Service Kendaraan Dinas BPKAD per Vendor", create_vendor_comparison_chart(get_top_vendors(df, 15), 15), height=600)
+            
             with c2:
-                st.markdown('<div class="info-box"><h4>🏆 Top 5 Vendor Detail</h4>', unsafe_allow_html=True)
-                vendors = get_top_vendors(df, 5)
-                for idx, (v, c) in enumerate(vendors.items(), 1):
-                    pct = (c / df['Total Biaya'].sum()) * 100
-                    st.markdown(f"**{idx}. {v[:20]}...**")
-                    st.progress(pct/100)
-                    st.caption(f"Rp {c:,.0f} ({pct:.1f}%)")
-                st.markdown('</div>', unsafe_allow_html=True)
-
+                total_vendor = df['Vendor_Clean'].nunique()
+                vendor_costs = df.groupby('Vendor_Clean')['Total Biaya'].sum().sort_values(ascending=False)
+                top_3_pct = (vendor_costs.head(3).sum() / vendor_costs.sum() * 100) if vendor_costs.sum() > 0 else 0
+                
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-label">Total Vendor</div>
+                    <div class="metric-value" style="font-size: 2.5em;">{total_vendor}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Konsentrasi Top 3</div>
+                    <div class="metric-value" style="font-size: 2.5em; color: #764ba2;">{top_3_pct:.1f}%</div>
+                    <div style="width: 100%; background: rgba(128,128,128,0.2); height: 8px; border-radius: 4px; margin-top: 5px;">
+                        <div style="width: {top_3_pct}%; background: linear-gradient(90deg, #667eea, #764ba2); height: 100%; border-radius: 4px;"></div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            
         with tab3:
             c1, c2 = st.columns([2,1])
             with c1:
@@ -592,10 +701,16 @@ def main():
             with c2:
                 render_chart_card("Proporsi Tipe", create_type_distribution_chart(calculate_type_statistics(df).head(10)))
             
-            st.markdown("### 📋 Tabel Efisiensi")
+            st.markdown("<div class='section-header'>📋 Tabel Efisiensi</div>", unsafe_allow_html=True)
             eff = df.groupby(['Nopol', 'Type']).agg({'Total Biaya': ['sum', 'mean', 'count']})
-            eff.columns = ['Total', 'Rata-rata', 'Frekuensi']
-            st.dataframe(eff.sort_values('Total', ascending=False).style.format({'Total':'Rp {:,.0f}', 'Rata-rata':'Rp {:,.0f}'}), use_container_width=True)
+            eff.columns = ['Total_Biaya', 'Rata_Rata', 'Frekuensi']
+            
+            st.dataframe(
+                eff.sort_values('Total_Biaya', ascending=False)
+                .style.format({'Total_Biaya':'Rp {:,.0f}', 'Rata_Rata':'Rp {:,.0f}', 'Frekuensi':'{:.0f}'})
+                .background_gradient(subset=['Total_Biaya'], cmap='Reds'),
+                use_container_width=True
+            )
 
         with tab4:
             cat_dist = calculate_category_distribution(df)
@@ -604,8 +719,8 @@ def main():
     # --- DETEKSI ANOMALI ---
     elif page == "Deteksi Anomali":
         st.markdown("""
-        <div class="main-header-container fade-up">
-            <h1>🔍 Deteksi Anomali</h1>
+        <div class="dashboard-header" style="padding: 20px; margin-bottom: 20px;">
+            <h1 style="font-size: 2em;">🔍 Deteksi Anomali</h1>
             <p>Identifikasi Transaksi Mencurigakan</p>
         </div>
         """, unsafe_allow_html=True)
@@ -618,83 +733,90 @@ def main():
         with c1:
             st.markdown(f"""
             <div class="alert-box alert-danger slide-left">
-                <h3 style="margin:0">⚠️ {len(cost_anom)}</h3>
-                <p style="margin:0">Biaya Ekstrim</p>
+                <h2 style="margin:0">⚠️ {len(cost_anom)}</h2>
+                <p style="margin:0; opacity:0.9;">Biaya Ekstrim</p>
             </div>
             """, unsafe_allow_html=True)
         with c2:
             st.markdown(f"""
             <div class="alert-box alert-warning slide-left" style="animation-delay: 0.1s">
-                <h3 style="margin:0">🤔 {len(logic_anom)}</h3>
-                <p style="margin:0">Logika Kategori</p>
+                <h2 style="margin:0">🤔 {len(logic_anom)}</h2>
+                <p style="margin:0; opacity:0.9;">Logika Kategori</p>
             </div>
             """, unsafe_allow_html=True)
         with c3:
             st.markdown(f"""
             <div class="alert-box alert-info slide-left" style="animation-delay: 0.2s">
-                <h3 style="margin:0">📋 {len(dups)}</h3>
-                <p style="margin:0">Duplikasi</p>
+                <h2 style="margin:0">📋 {len(dups)}</h2>
+                <p style="margin:0; opacity:0.9;">Duplikasi</p>
             </div>
             """, unsafe_allow_html=True)
 
-        t1, t2, t3 = st.tabs([" ****Biaya Ekstrim****", "****Logika Kategori****", "****Duplikasi****"])
+        t1, t2, t3 = st.tabs(["Biaya Ekstrim", "Logika Kategori", "Duplikasi"])
         
         with t1:
             if not cost_anom.empty:
                 fig = px.scatter(cost_anom, x='Tahun', y='Total Biaya', color='Keterangan', size='Total Biaya', hover_data=['Nopol', 'Vendor_Clean'], title=None)
-                fig.add_hline(
-                    y=cost_anom['Batas_Wajar'].mean(), 
-                    line_dash="dash", 
-                    line_color="red",
-                    annotation_text="Batas Wajar Rata-rata",
-                    annotation_position="top right"
-                )
+                fig.add_hline(y=cost_anom['Batas_Wajar'].mean(), line_dash="dash", line_color="red")
                 render_chart_card("Scatter Plot Anomali", fig)
-                # UPDATE: SORT BY TOTAL BIAYA DESCENDING
-                st.markdown("#### Tabel Anomali Biaya Ekstrim")
-                st.dataframe(cost_anom.sort_values(by='Total Biaya', ascending=False)[['Tahun', 'Bulan', 'Type', 'Nopol', 'Total Biaya', 'Batas_Wajar', 'Keterangan']].style.format({'Total Biaya': 'Rp {:,.0f}', 'Batas_Wajar': 'Rp {:,.0f}'}), use_container_width=True)
+                
+                st.dataframe(
+                    cost_anom.sort_values(by='Total Biaya', ascending=False)[['Tahun', 'Bulan', 'Type', 'Nopol', 'Total Biaya', 'Batas_Wajar', 'Keterangan']]
+                    .style.format({'Total Biaya': 'Rp {:,.0f}', 'Batas_Wajar': 'Rp {:,.0f}'})
+                    .background_gradient(subset=['Total Biaya'], cmap='Reds'),
+                    use_container_width=True
+                )
             else:
                 st.success("Tidak ada anomali biaya.")
             
         with t2:
             if not logic_anom.empty:
                 st.warning(f"Ditemukan {len(logic_anom)} transaksi 'RINGAN' tapi biayanya tinggi.")
-                # UPDATE: SORT BY TOTAL BIAYA DESCENDING
-                st.dataframe(logic_anom.sort_values(by='Total Biaya', ascending=False)[['Tahun','Type','Nopol', 'Total Biaya', 'Keterangan']].style.format({'Total Biaya': 'Rp {:,.0f}'}), use_container_width=True)
+                st.dataframe(
+                    logic_anom.sort_values(by='Total Biaya', ascending=False)[['Tahun','Type','Nopol', 'Total Biaya', 'Keterangan']]
+                    .style.format({'Total Biaya': 'Rp {:,.0f}'})
+                    .background_gradient(subset=['Total Biaya'], cmap='Reds'),
+                    use_container_width=True
+                )
             else: st.success("Logika kategori konsisten.")
             
         with t3:
             if not dups.empty:
                 cols_to_show = ['Tahun', 'Bulan', 'Nopol', 'Vendor_Clean', 'Total Biaya', 'Keterangan']
                 cols = [c for c in cols_to_show if c in dups.columns]
-                # UPDATE: SORT BY TOTAL BIAYA DESCENDING
-                st.dataframe(dups.sort_values(by='Total Biaya', ascending=False)[cols].style.format({'Total Biaya': 'Rp {:,.0f}'}), use_container_width=True)
+                st.dataframe(
+                    dups.sort_values(by='Total Biaya', ascending=False)[cols]
+                    .style.format({'Total Biaya': 'Rp {:,.0f}'})
+                    .background_gradient(subset=['Total Biaya'], cmap='Reds'),
+                    use_container_width=True
+                )
             else: st.success("Data bersih dari duplikasi.")
 
     # --- LAPORAN AUDIT ---
     elif page == "Laporan Audit":
         st.markdown("""
-        <div class="main-header-container fade-up">
-            <h1>📋 Laporan Audit</h1>
+        <div class="dashboard-header" style="padding: 20px; margin-bottom: 20px;">
+            <h1 style="font-size: 2em;">📋 Laporan Audit</h1>
             <p>Ringkasan Eksekutif & Rekomendasi</p>
         </div>
         """, unsafe_allow_html=True)
         
         c1, c2 = st.columns(2)
         with c1:
-            st.markdown('<div class="info-box"><h4>📊 Statistik Utama</h4>', unsafe_allow_html=True)
+            st.markdown("<div class='section-header'>📊 Statistik Utama</div>", unsafe_allow_html=True)
             st.markdown(f"""
-            <ul style="line-height: 2;">
-                <li><b>Total Pengeluaran:</b> Rp {df['Total Biaya'].sum():,.0f}</li>
-                <li><b>Total Transaksi:</b> {len(df):,}</li>
-                <li><b>Rata-rata per Unit:</b> Rp {df.groupby('Nopol')['Total Biaya'].sum().mean():,.0f}</li>
-                <li><b>Vendor Terbesar:</b> {get_top_vendors(df,1).index[0]}</li>
-            </ul>
+            <div class="metric-card">
+                <ul style="line-height: 2.2; list-style: none; padding: 0; color: var(--text-color);">
+                    <li>💰 <b>Total Pengeluaran:</b> Rp {df['Total Biaya'].sum():,.0f}</li>
+                    <li>🧾 <b>Total Transaksi:</b> {len(df):,}</li>
+                    <li>🚘 <b>Rata-rata per Unit:</b> Rp {df.groupby('Nopol')['Total Biaya'].sum().mean():,.0f}</li>
+                    <li>🏢 <b>Vendor Terbesar:</b> {get_top_vendors(df,1).index[0]}</li>
+                </ul>
+            </div>
             """, unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
             
         with c2:
-            st.markdown('<div class="info-box" style="border-left-color: #f39c12;"><h4>💡 Rekomendasi Tindakan</h4>', unsafe_allow_html=True)
+            st.markdown("<div class='section-header'>💡 Rekomendasi Tindakan</div>", unsafe_allow_html=True)
             recs = [
                 ("⚠️", "Review Anomali", f"Periksa {len(detect_cost_anomalies(df))} transaksi ekstrim."),
                 ("🏢", "Negosiasi Vendor", "Top 3 Vendor menguasai >50% biaya."),
@@ -702,12 +824,14 @@ def main():
             ]
             for icon, title, desc in recs:
                 st.markdown(f"""
-                <div style="display:flex; align-items:center; margin-bottom:10px;">
-                    <div style="font-size:1.5em; margin-right:10px;">{icon}</div>
-                    <div><b>{title}:</b> {desc}</div>
+                <div style="display:flex; align-items:center; margin-bottom:15px; padding:10px; background-color:var(--secondary-background-color); border-radius:10px; border-left:4px solid #764ba2; border:1px solid rgba(128,128,128,0.1);">
+                    <div style="font-size:1.8em; margin-right:15px;">{icon}</div>
+                    <div>
+                        <div style="font-weight:700; color:var(--text-color);">{title}</div>
+                        <div style="font-size:0.9em; opacity:0.8;">{desc}</div>
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
 
         if st.button("📥 Download Laporan Excel", use_container_width=True):
             output = 'Laporan_Audit.xlsx'
@@ -717,6 +841,8 @@ def main():
                 detect_cost_anomalies(df).to_excel(writer, sheet_name='Anomali', index=False)
             with open(output, 'rb') as f:
                 st.download_button("Download File", f, file_name="Audit.xlsx")
+                
+    render_footer()
 
 if __name__ == "__main__":
     main()
