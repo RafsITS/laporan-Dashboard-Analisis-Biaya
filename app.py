@@ -478,7 +478,7 @@ def render_footer():
     </div>
     """.format(
         sby_logo_html=f'<img src="data:image/png;base64,{sby_logo}" width="60">' if sby_logo else '',
-        its_logo_html=f'<img src="data:image/png;base64,{its_logo}" width="100">' if its_logo else ''
+        its_logo_html=f'<img src="data:image/png;base64,{its_logo}" width="180">' if its_logo else ''
     ), unsafe_allow_html=True)
 
 # ==========================================
