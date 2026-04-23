@@ -612,8 +612,8 @@ def create_category_chart(category_df):
     return fig
 
 def render_footer():
-    sby_logo = get_image_as_base64('logo-surabaya.png') or ''
-    its_logo = get_image_as_base64('Logo ITS-Biru.png') or ''
+    sby_logo = get_image_as_base64('SBY.png') or ''
+    its_logo = get_image_as_base64('ITS.png') or ''
     
     st.markdown("""
     <div class="footer">
