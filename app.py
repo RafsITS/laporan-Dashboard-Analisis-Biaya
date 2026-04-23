@@ -1031,7 +1031,7 @@ def main():
             if logo_base64:
                 st.markdown(f'<div style="text-align: center; margin-bottom: 20px;"><img src="data:image/png;base64,{logo_base64}" width="150" style="border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>', unsafe_allow_html=True)
             
-            its_logo = get_image_as_base64('Logo ITS-Biru.png')
+            its_logo = get_image_as_base64('ITS.png')
             if its_logo:
                 st.markdown(f'<div style="text-align: center;"><img src="data:image/png;base64,{its_logo}" width="200"></div>', unsafe_allow_html=True)
         
