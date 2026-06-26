@@ -444,15 +444,15 @@ def load_custom_css(theme_mode="Ikuti Tema Pengguna"):
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
     }}
 
-    .theme-html-table {
+    .theme-html-table {{
         width: 100%;
         border-collapse: collapse;
         font-size: 0.86rem;
         color: var(--text-main) !important;
         background: var(--card-bg) !important;
-    }
+    }}
 
-    .theme-html-table thead th {
+    .theme-html-table thead th {{
         position: sticky;
         top: 0;
         z-index: 2;
@@ -463,35 +463,35 @@ def load_custom_css(theme_mode="Ikuti Tema Pengguna"):
         text-align: left;
         font-weight: 800;
         white-space: nowrap;
-    }
+    }}
 
-    .theme-html-table tbody th {
+    .theme-html-table tbody th {{
         background: #0f172a !important;
         color: #cbd5e1 !important;
         border-bottom: 1px solid rgba(148,163,184,0.14) !important;
         padding: 9px 12px;
         font-weight: 600;
         white-space: nowrap;
-    }
+    }}
 
-    .theme-html-table td {
+    .theme-html-table td {{
         background: #111827 !important;
         color: #f8fafc !important;
         border-bottom: 1px solid rgba(148,163,184,0.14) !important;
         padding: 9px 12px;
         white-space: nowrap;
-    }
+    }}
 
     .theme-html-table tbody tr:nth-child(even) td,
-    .theme-html-table tbody tr:nth-child(even) th {
+    .theme-html-table tbody tr:nth-child(even) th {{
         background: #0f172a !important;
-    }
+    }}
 
     .theme-html-table tbody tr:hover td,
-    .theme-html-table tbody tr:hover th {
+    .theme-html-table tbody tr:hover th {{
         background: #1e293b !important;
         color: #ffffff !important;
-    }
+    }}
 
     /* Tabs */
     button[data-baseweb="tab"] {{ color: var(--text-muted) !important; background: transparent !important; }}
@@ -1475,4 +1475,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
