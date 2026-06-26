@@ -418,6 +418,25 @@ def load_custom_css(theme_mode="Ikuti Tema Pengguna"):
         border-color: var(--border-theme) !important;
     }}
 
+    /* Perbaikan tambahan: beberapa versi Streamlit memakai struktur glide-data-grid.
+       Selector ini memaksa area grid mengikuti tema gelap/terang. */
+    [data-testid="stDataFrame"] .glideDataEditor,
+    [data-testid="stDataFrame"] .dvn-scroller,
+    [data-testid="stDataFrame"] .dvn-underlay,
+    [data-testid="stDataFrame"] [class*="glide"],
+    [data-testid="stDataFrame"] [class*="data-grid"],
+    [data-testid="stDataFrame"] [class*="DataFrame"] {{
+        background: var(--card-bg) !important;
+        color: var(--text-main) !important;
+    }}
+
+    [data-testid="stDataFrame"] input,
+    [data-testid="stDataFrame"] textarea {{
+        background: var(--card-bg-2) !important;
+        color: var(--text-main) !important;
+        border-color: var(--border-theme) !important;
+    }}
+
     /* Tabs */
     button[data-baseweb="tab"] {{ color: var(--text-muted) !important; background: transparent !important; }}
     button[data-baseweb="tab"][aria-selected="true"] {{ color: var(--accent-1) !important; border-bottom-color: var(--accent-1) !important; }}
@@ -543,25 +562,52 @@ def render_chart_card(title, fig, height=450):
         st.markdown("</div>", unsafe_allow_html=True)
 
 def apply_table_theme(styler, gradient_subset=None, cmap="Blues"):
-    """Make pandas Styler tables readable in both dark and light modes."""
+    """Make pandas Styler tables readable in both dark and light modes.
+
+    Catatan penting:
+    - Pada dark mode, background_gradient bawaan Pandas cenderung menghasilkan warna
+      putih/biru muda sehingga teks menjadi tidak terlihat.
+    - Karena itu gradient hanya dipakai pada mode terang. Pada mode gelap, tabel
+      dibuat solid dark agar kontras dan tetap rapi.
+    """
     current_theme = st.session_state.get("theme_mode", "Ikuti Tema Pengguna")
     is_dark = current_theme in ["Gelap", "Ikuti Tema Pengguna"]
 
-    if gradient_subset:
-        styler = styler.background_gradient(subset=gradient_subset, cmap=cmap)
-
     if is_dark:
+        # Jangan pakai background_gradient di dark mode karena membuat sel menjadi putih.
         styler = styler.set_table_styles([
-            {"selector": "thead th", "props": [("background-color", "#0f172a"), ("color", "#f8fafc"), ("border-color", "rgba(148,163,184,0.25)")]},
-            {"selector": "tbody th", "props": [("background-color", "#111827"), ("color", "#e2e8f0"), ("border-color", "rgba(148,163,184,0.18)")]},
-            {"selector": "td", "props": [("background-color", "#111827"), ("color", "#f8fafc"), ("border-color", "rgba(148,163,184,0.18)")]},
-            {"selector": "tr:nth-child(even) td", "props": [("background-color", "#151f32")]},
-        ], overwrite=False)
+            {"selector": "thead th", "props": [
+                ("background-color", "#020617"),
+                ("color", "#f8fafc"),
+                ("border-color", "rgba(148,163,184,0.24)"),
+                ("font-weight", "700")
+            ]},
+            {"selector": "tbody th", "props": [
+                ("background-color", "#0f172a"),
+                ("color", "#e2e8f0"),
+                ("border-color", "rgba(148,163,184,0.18)")
+            ]},
+            {"selector": "td", "props": [
+                ("background-color", "#111827"),
+                ("color", "#f8fafc"),
+                ("border-color", "rgba(148,163,184,0.16)")
+            ]},
+            {"selector": "tr:nth-child(even) td", "props": [
+                ("background-color", "#0f172a")
+            ]},
+            {"selector": "tr:hover td", "props": [
+                ("background-color", "#1e293b"),
+                ("color", "#ffffff")
+            ]},
+        ], overwrite=True)
         styler = styler.set_properties(**{
+            "background-color": "#111827",
             "color": "#f8fafc",
-            "border-color": "rgba(148,163,184,0.18)",
+            "border-color": "rgba(148,163,184,0.16)",
         })
     else:
+        if gradient_subset:
+            styler = styler.background_gradient(subset=gradient_subset, cmap=cmap)
         styler = styler.set_table_styles([
             {"selector": "thead th", "props": [("background-color", "#eef2ff"), ("color", "#0f172a"), ("border-color", "rgba(15,23,42,0.12)")]},
             {"selector": "tbody th", "props": [("background-color", "#f8fafc"), ("color", "#0f172a"), ("border-color", "rgba(15,23,42,0.10)")]},
