@@ -439,10 +439,10 @@ def load_custom_css(theme_mode="Ikuti Tema Pengguna"):
 
 
     /* HTML fallback table untuk dark mode: lebih aman daripada canvas st.dataframe */
-    .theme-table-scroll {
+    .theme-table-scroll {{
         background: var(--card-bg) !important;
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
-    }
+    }}
 
     .theme-html-table {
         width: 100%;
