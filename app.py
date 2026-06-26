@@ -334,12 +334,88 @@ def load_custom_css(theme_mode="Ikuti Tema Pengguna"):
         padding-left: 10px;
     }}
 
+    /* File uploader - dibuat menyatu dengan light/dark theme */
+    [data-testid="stFileUploader"] {{
+        background: linear-gradient(180deg, var(--card-bg) 0%, var(--card-bg-2) 100%) !important;
+        border: 1px solid var(--border-theme) !important;
+        border-radius: 14px !important;
+        padding: 12px !important;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.10);
+    }}
+
+    [data-testid="stFileUploaderDropzone"] {{
+        background: color-mix(in srgb, var(--card-bg-2) 92%, var(--accent-1) 8%) !important;
+        border: 1.5px dashed color-mix(in srgb, var(--accent-1) 50%, var(--border-theme)) !important;
+        border-radius: 12px !important;
+        color: var(--text-main) !important;
+    }}
+
+    [data-testid="stFileUploaderDropzone"] * {{ color: var(--text-main) !important; }}
+    [data-testid="stFileUploaderDropzone"] small {{ color: var(--text-soft) !important; }}
+
+    [data-testid="stFileUploaderDropzone"] button {{
+        background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%) !important;
+        color: white !important;
+        border: 0 !important;
+        border-radius: 10px !important;
+        font-weight: 700 !important;
+    }}
+
+    [data-testid="stUploadedFile"] {{
+        background: var(--card-bg-2) !important;
+        border: 1px solid var(--border-theme) !important;
+        border-radius: 10px !important;
+        color: var(--text-main) !important;
+    }}
+
+    /* Section card khusus untuk tabel agar judul dan isi tidak tampak terpisah */
+    .table-card {{
+        background: linear-gradient(180deg, var(--card-bg) 0%, var(--card-bg-2) 100%);
+        border-radius: 16px;
+        box-shadow: var(--shadow-theme);
+        border: 1px solid var(--border-theme);
+        padding: 18px 18px 12px 18px;
+        margin-bottom: 25px;
+        color: var(--text-main) !important;
+    }}
+
+    .table-card-title {{
+        font-weight: 800;
+        font-size: 1.08em;
+        margin-bottom: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: var(--text-main) !important;
+        border-bottom: 1px solid var(--border-theme);
+        padding-bottom: 10px;
+    }}
+
+    .table-card-caption {{
+        color: var(--text-muted) !important;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }}
+
     /* Tables / Dataframes */
     [data-testid="stDataFrame"], [data-testid="stTable"] {{
-        background-color: var(--card-bg) !important;
+        background: var(--card-bg) !important;
         border-radius: 14px !important;
         border: 1px solid var(--border-theme) !important;
         overflow: hidden;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }}
+
+    [data-testid="stDataFrame"] div[role="grid"],
+    [data-testid="stDataFrame"] canvas,
+    [data-testid="stDataFrameResizable"] {{
+        background-color: var(--card-bg) !important;
+    }}
+
+    [data-testid="stDataFrame"] button,
+    [data-testid="stDataFrame"] [data-testid="stElementToolbar"] {{
+        background: var(--card-bg-2) !important;
+        color: var(--text-main) !important;
+        border-color: var(--border-theme) !important;
     }}
 
     /* Tabs */
@@ -465,6 +541,34 @@ def render_chart_card(title, fig, height=450):
         """, unsafe_allow_html=True)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
+
+def apply_table_theme(styler, gradient_subset=None, cmap="Blues"):
+    """Make pandas Styler tables readable in both dark and light modes."""
+    current_theme = st.session_state.get("theme_mode", "Ikuti Tema Pengguna")
+    is_dark = current_theme in ["Gelap", "Ikuti Tema Pengguna"]
+
+    if gradient_subset:
+        styler = styler.background_gradient(subset=gradient_subset, cmap=cmap)
+
+    if is_dark:
+        styler = styler.set_table_styles([
+            {"selector": "thead th", "props": [("background-color", "#0f172a"), ("color", "#f8fafc"), ("border-color", "rgba(148,163,184,0.25)")]},
+            {"selector": "tbody th", "props": [("background-color", "#111827"), ("color", "#e2e8f0"), ("border-color", "rgba(148,163,184,0.18)")]},
+            {"selector": "td", "props": [("background-color", "#111827"), ("color", "#f8fafc"), ("border-color", "rgba(148,163,184,0.18)")]},
+            {"selector": "tr:nth-child(even) td", "props": [("background-color", "#151f32")]},
+        ], overwrite=False)
+        styler = styler.set_properties(**{
+            "color": "#f8fafc",
+            "border-color": "rgba(148,163,184,0.18)",
+        })
+    else:
+        styler = styler.set_table_styles([
+            {"selector": "thead th", "props": [("background-color", "#eef2ff"), ("color", "#0f172a"), ("border-color", "rgba(15,23,42,0.12)")]},
+            {"selector": "tbody th", "props": [("background-color", "#f8fafc"), ("color", "#0f172a"), ("border-color", "rgba(15,23,42,0.10)")]},
+            {"selector": "td", "props": [("color", "#0f172a"), ("border-color", "rgba(15,23,42,0.10)")]},
+        ], overwrite=False)
+
+    return styler
 
 # ==========================================
 # ANALYSIS FUNCTIONS
@@ -930,12 +1034,9 @@ def main():
         c1, c2 = st.columns(2)
         with c1:
             st.markdown("""
-                        <div class="chart-container">
-                            <div style="font-weight: 700; font-size: 1.1em; margin-bottom: 15px; text-transform: uppercase; border-bottom: 2px solid rgba(128,128,128,0.1); padding-bottom: 10px;">
-                                🏆 10 Kendaraan Biaya Tertinggi
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
+            <div class="table-card">
+                <div class="table-card-title">🏆 10 Kendaraan Biaya Tertinggi</div>
+            """, unsafe_allow_html=True)
             top_units = get_top_units(df, 10)
 
             if not top_units.empty:
@@ -944,13 +1045,16 @@ def main():
                 display_units.columns = ['Nopol', 'Tipe', 'Total Biaya', 'Frekuensi']
                 
                 st.dataframe(
-                    display_units.style
-                    .format({'Total Biaya': 'Rp {:,.0f}', 'Frekuensi': '{:.0f}x'})
-                    .background_gradient(subset=['Total Biaya'], cmap='Reds'),
+                    apply_table_theme(
+                        display_units.style.format({'Total Biaya': 'Rp {:,.0f}', 'Frekuensi': '{:.0f}x'}),
+                        gradient_subset=['Total Biaya'],
+                        cmap='Reds'
+                    ),
                     use_container_width=True
                 )
             else:
                 st.info("Data kendaraan (TOP 10) belum tersedia.")
+            st.markdown("</div>", unsafe_allow_html=True)
         with c2:
             vendors = get_top_vendors(df)
             render_chart_card("Distribusi Vendor Utama", create_vendor_pie_chart(vendors))
@@ -1022,16 +1126,23 @@ def main():
             with c2:
                 render_chart_card("Proporsi Tipe", create_type_distribution_chart(calculate_type_statistics(df).head(10)))
             
-            st.markdown("<div class='section-header'>📋 Tabel Efisiensi</div>", unsafe_allow_html=True)
+            st.markdown("""
+            <div class="table-card">
+                <div class="table-card-title">📋 Tabel Efisiensi</div>
+            """, unsafe_allow_html=True)
             eff = df.groupby(['Nopol', 'Type']).agg({'Total Biaya': ['sum', 'mean', 'count']})
             eff.columns = ['Total_Biaya', 'Rata_Rata', 'Frekuensi']
             
             st.dataframe(
-                eff.sort_values('Total_Biaya', ascending=False)
-                .style.format({'Total_Biaya': 'Rp {:,.0f}', 'Rata_Rata': 'Rp {:,.0f}', 'Frekuensi': '{:.0f}'})
-                .background_gradient(subset=['Total_Biaya'], cmap='Reds'),
+                apply_table_theme(
+                    eff.sort_values('Total_Biaya', ascending=False)
+                    .style.format({'Total_Biaya': 'Rp {:,.0f}', 'Rata_Rata': 'Rp {:,.0f}', 'Frekuensi': '{:.0f}'}),
+                    gradient_subset=['Total_Biaya'],
+                    cmap='Reds'
+                ),
                 use_container_width=True
             )
+            st.markdown("</div>", unsafe_allow_html=True)
 
         with tab4:
             cat_dist = calculate_category_distribution(df)
@@ -1061,15 +1172,23 @@ def main():
         if filter_nopol: filtered_df = filtered_df[filtered_df['Nopol'].isin(filter_nopol)]
         
         filtered_df = filtered_df.sort_values(['Tahun', 'Month_Num'])
-        st.markdown(f"**Menampilkan {len(filtered_df):,} baris data terfilter:**")
         
         cols_display = ['Tahun', 'Bulan', 'Nopol', 'Type', 'Vendor_Clean', 'Keterangan', 'Total Biaya']
         
+        st.markdown(f"""
+        <div class="table-card">
+            <div class="table-card-title">🗃️ Detail Transaksi</div>
+            <div class="table-card-caption">Menampilkan {len(filtered_df):,} baris data terfilter</div>
+        """, unsafe_allow_html=True)
         st.dataframe(
-            filtered_df[cols_display].style.format({'Total Biaya': 'Rp {:,.0f}'})
-            .background_gradient(subset=['Total Biaya'], cmap='Blues'),
+            apply_table_theme(
+                filtered_df[cols_display].style.format({'Total Biaya': 'Rp {:,.0f}'}),
+                gradient_subset=['Total Biaya'],
+                cmap='Blues'
+            ),
             use_container_width=True, height=500
         )
+        st.markdown("</div>", unsafe_allow_html=True)
         
         csv = filtered_df[cols_display].to_csv(index=False).encode('utf-8')
         st.download_button(
