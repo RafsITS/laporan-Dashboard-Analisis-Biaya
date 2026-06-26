@@ -27,207 +27,356 @@ def get_image_as_base64(image_path):
         return None
 
 # ==========================================
-# CUSTOM CSS STYLING (THEME AWARE & HIGH CONTRAST)
+# CUSTOM CSS STYLING (LIGHT / DARK / AUTO)
 # ==========================================
-def load_custom_css():
-    st.markdown("""
-    <style>
-    /* Import Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
-    
-    /* Global Styles */
-    * { font-family: 'Poppins', sans-serif; }
-    
-    /* Sidebar Styling */
-    [data-testid="stSidebar"] {
-        background-color: var(--secondary-background-color);
-        border-right: 1px solid rgba(128,128,128,0.2);
-    }
-    
-    [data-testid="stSidebar"] .block-container {
-        padding-bottom: 100px; 
+def get_theme_tokens(theme_mode="Ikuti Tema Pengguna"):
+    """Return CSS tokens and Plotly template based on selected theme mode."""
+    themes = {
+        "Gelap": {
+            "app_bg": "#0b1020",
+            "app_bg_2": "#111827",
+            "card_bg": "#111827",
+            "card_bg_2": "#151f32",
+            "sidebar_bg": "#0f172a",
+            "text_main": "#f8fafc",
+            "text_muted": "#cbd5e1",
+            "text_soft": "#94a3b8",
+            "border": "rgba(148, 163, 184, 0.22)",
+            "shadow": "0 12px 30px rgba(0,0,0,0.35)",
+            "header_start": "#312e81",
+            "header_mid": "#6d28d9",
+            "header_end": "#0e7490",
+            "accent_1": "#818cf8",
+            "accent_2": "#a78bfa",
+            "accent_3": "#22d3ee",
+            "plotly_template": "plotly_dark",
+            "plot_grid": "rgba(148, 163, 184, 0.16)",
+            "plot_text": "#f8fafc",
+        },
+        "Terang": {
+            "app_bg": "#f8fafc",
+            "app_bg_2": "#eef2ff",
+            "card_bg": "#ffffff",
+            "card_bg_2": "#f8fafc",
+            "sidebar_bg": "#eef2ff",
+            "text_main": "#0f172a",
+            "text_muted": "#334155",
+            "text_soft": "#64748b",
+            "border": "rgba(15, 23, 42, 0.12)",
+            "shadow": "0 12px 28px rgba(15,23,42,0.09)",
+            "header_start": "#667eea",
+            "header_mid": "#764ba2",
+            "header_end": "#0ea5e9",
+            "accent_1": "#4f46e5",
+            "accent_2": "#7c3aed",
+            "accent_3": "#0891b2",
+            "plotly_template": "plotly_white",
+            "plot_grid": "rgba(15, 23, 42, 0.12)",
+            "plot_text": "#0f172a",
+        },
     }
 
-    /* --- KP IDENTITY HEADER (KOTAK PUTIH ATAS) --- */
-    .kp-header-container {
-        background-color: var(--secondary-background-color);
-        border-radius: 15px;
+    # "Ikuti Tema Pengguna" dibuat default gelap di Python supaya chart tidak bentrok.
+    # Warna CSS tetap bisa mengikuti preferensi browser melalui media query di bawah.
+    return themes.get(theme_mode, themes["Gelap"])
+
+
+def load_custom_css(theme_mode="Ikuti Tema Pengguna"):
+    tokens = get_theme_tokens(theme_mode)
+    auto_css = """
+    @media (prefers-color-scheme: light) {
+        :root {
+            --app-bg: #f8fafc;
+            --app-bg-2: #eef2ff;
+            --card-bg: #ffffff;
+            --card-bg-2: #f8fafc;
+            --sidebar-bg: #eef2ff;
+            --text-main: #0f172a;
+            --text-muted: #334155;
+            --text-soft: #64748b;
+            --border-theme: rgba(15, 23, 42, 0.12);
+            --shadow-theme: 0 12px 28px rgba(15,23,42,0.09);
+            --accent-1: #4f46e5;
+            --accent-2: #7c3aed;
+            --accent-3: #0891b2;
+            --header-start: #667eea;
+            --header-mid: #764ba2;
+            --header-end: #0ea5e9;
+        }
+    }
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --app-bg: #0b1020;
+            --app-bg-2: #111827;
+            --card-bg: #111827;
+            --card-bg-2: #151f32;
+            --sidebar-bg: #0f172a;
+            --text-main: #f8fafc;
+            --text-muted: #cbd5e1;
+            --text-soft: #94a3b8;
+            --border-theme: rgba(148, 163, 184, 0.22);
+            --shadow-theme: 0 12px 30px rgba(0,0,0,0.35);
+            --accent-1: #818cf8;
+            --accent-2: #a78bfa;
+            --accent-3: #22d3ee;
+            --header-start: #312e81;
+            --header-mid: #6d28d9;
+            --header-end: #0e7490;
+        }
+    }
+    """ if theme_mode == "Ikuti Tema Pengguna" else """
+    :root {
+        --app-bg: %(app_bg)s;
+        --app-bg-2: %(app_bg_2)s;
+        --card-bg: %(card_bg)s;
+        --card-bg-2: %(card_bg_2)s;
+        --sidebar-bg: %(sidebar_bg)s;
+        --text-main: %(text_main)s;
+        --text-muted: %(text_muted)s;
+        --text-soft: %(text_soft)s;
+        --border-theme: %(border)s;
+        --shadow-theme: %(shadow)s;
+        --accent-1: %(accent_1)s;
+        --accent-2: %(accent_2)s;
+        --accent-3: %(accent_3)s;
+        --header-start: %(header_start)s;
+        --header-mid: %(header_mid)s;
+        --header-end: %(header_end)s;
+    }
+    """ % tokens
+
+    st.markdown(f"""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
+
+    {auto_css}
+
+    * {{ font-family: 'Poppins', sans-serif; }}
+
+    html, body, [data-testid="stAppViewContainer"], .stApp {{
+        background: radial-gradient(circle at top left, color-mix(in srgb, var(--accent-1) 16%, transparent), transparent 30%),
+                    radial-gradient(circle at top right, color-mix(in srgb, var(--accent-3) 10%, transparent), transparent 28%),
+                    var(--app-bg) !important;
+        color: var(--text-main) !important;
+    }}
+
+    [data-testid="stHeader"] {{
+        background: color-mix(in srgb, var(--app-bg) 78%, transparent) !important;
+        backdrop-filter: blur(12px);
+    }}
+
+    [data-testid="stToolbar"], [data-testid="stDecoration"] {{
+        background: transparent !important;
+    }}
+
+    .block-container {{
+        padding-top: 2rem;
+        color: var(--text-main) !important;
+    }}
+
+    p, li, span, label, div, h1, h2, h3, h4, h5, h6 {{
+        color: inherit;
+    }}
+
+    /* Sidebar */
+    [data-testid="stSidebar"] {{
+        background: linear-gradient(180deg, var(--sidebar-bg) 0%, var(--card-bg) 100%) !important;
+        border-right: 1px solid var(--border-theme);
+    }}
+
+    [data-testid="stSidebar"] .block-container {{ padding-bottom: 100px; }}
+    [data-testid="stSidebar"] * {{ color: var(--text-main) !important; }}
+    [data-testid="stSidebar"] hr {{ border-color: var(--border-theme) !important; }}
+
+    /* Input controls */
+    .stSelectbox div[data-baseweb="select"] > div,
+    .stMultiSelect div[data-baseweb="select"] > div,
+    .stTextInput input,
+    .stNumberInput input,
+    .stTextArea textarea {{
+        background-color: var(--card-bg) !important;
+        color: var(--text-main) !important;
+        border: 1px solid var(--border-theme) !important;
+        border-radius: 10px !important;
+    }}
+
+    .stRadio label, .stCheckbox label, .stFileUploader label {{ color: var(--text-main) !important; }}
+
+    /* KP identity header */
+    .kp-header-container {{
+        background: linear-gradient(135deg, var(--card-bg) 0%, var(--card-bg-2) 100%);
+        border-radius: 18px;
         padding: 20px 30px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        border: 1px solid rgba(128,128,128,0.2);
+        box-shadow: var(--shadow-theme);
+        border: 1px solid var(--border-theme);
         display: flex;
         align-items: center;
         gap: 25px;
         margin-bottom: 25px;
         animation: slideInDown 0.8s ease-out;
-    }
+    }}
 
-    .kp-logo-section { flex-shrink: 0; }
-    .kp-logo-section img { max-height: 80px; width: auto; }
+    .kp-logo-section {{ flex-shrink: 0; }}
+    .kp-logo-section img {{ max-height: 80px; width: auto; filter: drop-shadow(0 8px 14px rgba(0,0,0,0.24)); }}
 
-    .kp-text-section {
-        border-left: 3px solid #667eea;
+    .kp-text-section {{
+        border-left: 3px solid var(--accent-1);
         padding-left: 25px;
         flex-grow: 1;
-    }
+    }}
 
-    .kp-subtitle {
+    .kp-subtitle {{
         font-size: 0.85em;
         font-weight: 700;
-        color: #667eea;
+        color: var(--accent-1) !important;
         text-transform: uppercase;
         letter-spacing: 1px;
         margin-bottom: 5px;
-    }
+    }}
 
-    .kp-name {
-        font-size: 1.1em;
-        font-weight: 600;
-        margin: 2px 0;
-        color: var(--text-color);
-    }
+    .kp-name {{ font-size: 1.1em; font-weight: 600; margin: 2px 0; color: var(--text-main) !important; }}
 
-    /* --- MAIN DASHBOARD HEADER --- */
-    .dashboard-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    /* Main dashboard header */
+    .dashboard-header {{
+        background: linear-gradient(135deg, var(--header-start) 0%, var(--header-mid) 55%, var(--header-end) 100%);
         padding: 35px;
-        border-radius: 20px;
+        border-radius: 22px;
         text-align: center;
         margin-bottom: 30px;
-        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-        color: white;
+        box-shadow: 0 16px 35px color-mix(in srgb, var(--accent-1) 28%, transparent);
+        color: white !important;
         animation: slideInUp 0.8s ease-out;
-    }
-    
-    .dashboard-header h1 {
+        border: 1px solid rgba(255,255,255,0.16);
+    }}
+
+    .dashboard-header h1 {{
         font-size: 2.5em;
         font-weight: 700;
         margin: 0;
-        text-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-    
-    .dashboard-header p {
-        font-size: 1.1em;
-        opacity: 0.9;
-        margin-top: 10px;
-    }
+        color: white !important;
+        text-shadow: 0 4px 12px rgba(0,0,0,0.28);
+    }}
 
-    /* Metric Card Styling */
-    .metric-card {
-        background-color: var(--secondary-background-color);
+    .dashboard-header p {{ font-size: 1.1em; opacity: 0.92; margin-top: 10px; color: #eef2ff !important; }}
+
+    /* Cards */
+    .metric-card, .chart-container {{
+        background: linear-gradient(180deg, var(--card-bg) 0%, var(--card-bg-2) 100%);
+        border-radius: 16px;
+        box-shadow: var(--shadow-theme);
+        border: 1px solid var(--border-theme);
+    }}
+
+    .metric-card {{
         padding: 20px;
-        border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        border: 1px solid rgba(128, 128, 128, 0.1);
-        border-left: 5px solid #667eea;
-        transition: transform 0.3s ease;
+        border-left: 5px solid var(--accent-1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
         margin-bottom: 15px;
-    }
-    
-    .metric-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-    }
-    
-    .metric-value {
+    }}
+
+    .metric-card:hover {{ transform: translateY(-5px); box-shadow: 0 18px 35px rgba(0,0,0,0.18); }}
+
+    .metric-value {{
         font-size: 2em;
         font-weight: 800;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 50%, var(--accent-3) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin: 10px 0;
-    }
-    
-    .metric-label {
-        color: var(--text-color);
-        opacity: 0.8;
+    }}
+
+    .metric-label {{
+        color: var(--text-muted) !important;
         font-size: 0.85em;
         text-transform: uppercase;
         font-weight: 600;
         letter-spacing: 1px;
-    }
+    }}
 
-    /* Chart Container */
-    .chart-container {
-        background-color: var(--secondary-background-color);
-        padding: 20px;
-        border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        margin-bottom: 25px;
-        border: 1px solid rgba(128, 128, 128, 0.1);
-    }
+    .chart-container {{ padding: 20px; margin-bottom: 25px; color: var(--text-main) !important; }}
+    .chart-container > div:first-child {{ color: var(--text-main) !important; }}
 
     /* Alert Boxes */
-    .alert-box {
+    .alert-box {{
         padding: 20px;
         border-radius: 15px;
         margin: 15px 0;
-        color: white;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-    .alert-danger { background: linear-gradient(135deg, #ef5350 0%, #e53935 100%); }
-    .alert-warning { background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%); }
-    .alert-info { background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%); }
-    .alert-success { background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%); }
+        color: white !important;
+        box-shadow: var(--shadow-theme);
+        border: 1px solid rgba(255,255,255,0.12);
+    }}
+    .alert-danger {{ background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%); }}
+    .alert-warning {{ background: linear-gradient(135deg, #92400e 0%, #f59e0b 100%); }}
+    .alert-info {{ background: linear-gradient(135deg, #075985 0%, #0284c7 100%); }}
+    .alert-success {{ background: linear-gradient(135deg, #166534 0%, #16a34a 100%); }}
 
-    /* SIDEBAR INFO CARDS (SOLID COLOR) */
-    .sidebar-card {
-        background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+    /* Sidebar Cards */
+    .sidebar-card {{
+        background: linear-gradient(135deg, var(--header-start) 0%, var(--header-mid) 55%, var(--header-end) 100%);
         border-radius: 12px;
         padding: 15px;
         margin-bottom: 10px;
         text-align: center;
         color: white !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        border: 1px solid rgba(255,255,255,0.2);
-    }
-    
-    .sidebar-value {
-        font-size: 1.6rem;
-        font-weight: 800;
-        margin-bottom: 5px;
-        color: white !important;
-    }
-    
-    .sidebar-label {
-        font-size: 0.8rem;
-        opacity: 0.9;
-        font-weight: 500;
-        color: white !important;
-    }
+        box-shadow: 0 10px 22px rgba(0,0,0,0.18);
+        border: 1px solid rgba(255,255,255,0.14);
+    }}
 
-    /* Section Header */
-    .section-header {
-        color: var(--text-color);
+    .sidebar-value {{ font-size: 1.6rem; font-weight: 800; margin-bottom: 5px; color: white !important; }}
+    .sidebar-label {{ font-size: 0.8rem; opacity: 0.9; font-weight: 500; color: #eef2ff !important; }}
+
+    .section-header {{
+        color: var(--text-main) !important;
         font-size: 1.4em;
         font-weight: 700;
         margin: 25px 0 15px 0;
-        border-left: 5px solid #667eea;
+        border-left: 5px solid var(--accent-1);
         padding-left: 10px;
-    }
-    
-    /* Footer */
-    .footer {
+    }}
+
+    /* Tables / Dataframes */
+    [data-testid="stDataFrame"], [data-testid="stTable"] {{
+        background-color: var(--card-bg) !important;
+        border-radius: 14px !important;
+        border: 1px solid var(--border-theme) !important;
+        overflow: hidden;
+    }}
+
+    /* Tabs */
+    button[data-baseweb="tab"] {{ color: var(--text-muted) !important; background: transparent !important; }}
+    button[data-baseweb="tab"][aria-selected="true"] {{ color: var(--accent-1) !important; border-bottom-color: var(--accent-1) !important; }}
+
+    /* Buttons */
+    .stDownloadButton button, .stButton button {{
+        background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%) !important;
+        color: white !important;
+        border: 0 !important;
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        box-shadow: 0 10px 20px color-mix(in srgb, var(--accent-1) 24%, transparent);
+    }}
+
+    .footer {{
         text-align: center;
         padding: 30px;
         margin-top: 50px;
-        opacity: 0.7;
-        border-top: 1px solid rgba(128,128,128,0.2);
-    }
-    
-    /* Animations */
-    @keyframes slideInDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    @keyframes slideInUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    @keyframes slideInLeft { from { transform: translateX(-50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    @keyframes slideInRight { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    
-    .slide-left { animation: slideInLeft 0.6s ease-out; }
-    .slide-right { animation: slideInRight 0.6s ease-out; }
-    
-    /* Hide Streamlit Elements */
-    .css-15zrgzn {display: none}
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
+        color: var(--text-muted) !important;
+        border-top: 1px solid var(--border-theme);
+    }}
+
+    .footer * {{ color: var(--text-muted) !important; }}
+
+    @keyframes slideInDown {{ from {{ transform: translateY(-50px); opacity: 0; }} to {{ transform: translateY(0); opacity: 1; }} }}
+    @keyframes slideInUp {{ from {{ transform: translateY(50px); opacity: 0; }} to {{ transform: translateY(0); opacity: 1; }} }}
+    @keyframes slideInLeft {{ from {{ transform: translateX(-50px); opacity: 0; }} to {{ transform: translateX(0); opacity: 1; }} }}
+    @keyframes slideInRight {{ from {{ transform: translateX(50px); opacity: 0; }} to {{ transform: translateX(0); opacity: 1; }} }}
+
+    .slide-left {{ animation: slideInLeft 0.6s ease-out; }}
+    .slide-right {{ animation: slideInRight 0.6s ease-out; }}
+
+    .css-15zrgzn {{display: none}}
+    #MainMenu {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
     </style>
     """, unsafe_allow_html=True)
 
@@ -293,21 +442,24 @@ def load_and_process_data(file_path=None):
 # ==========================================
 def render_chart_card(title, fig, height=450):
     if fig:
+        current_theme = st.session_state.get("theme_mode", "Ikuti Tema Pengguna")
+        tokens = get_theme_tokens(current_theme)
         fig.update_layout(
+            template=tokens["plotly_template"],
             separators=".,",
             title_text="",
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(family='Poppins'),
+            font=dict(family='Poppins', color=tokens["plot_text"]),
             margin=dict(l=40, r=40, t=20, b=40),
             height=height,
-            xaxis=dict(showgrid=False, zeroline=False),
-            yaxis=dict(showgrid=True, gridcolor='rgba(128, 128, 128, 0.1)', zeroline=False),
-            legend=dict(font=dict(family='Poppins'))
+            xaxis=dict(showgrid=False, zeroline=False, color=tokens["plot_text"]),
+            yaxis=dict(showgrid=True, gridcolor=tokens["plot_grid"], zeroline=False, color=tokens["plot_text"]),
+            legend=dict(font=dict(family='Poppins', color=tokens["plot_text"]))
         )
         st.markdown(f"""
         <div class="chart-container">
-            <div style="font-weight: 700; font-size: 1.1em; margin-bottom: 15px; text-transform: uppercase; border-bottom: 2px solid rgba(128,128,128,0.1); padding-bottom: 10px;">
+            <div style="font-weight: 700; font-size: 1.1em; margin-bottom: 15px; text-transform: uppercase; border-bottom: 2px solid var(--border-theme); padding-bottom: 10px;">
                 {title}
             </div>
         """, unsafe_allow_html=True)
@@ -642,7 +794,17 @@ def render_footer():
 # MAIN APPLICATION
 # ==========================================
 def main():
-    load_custom_css()
+    # Pilihan tema dibuat di sidebar agar pengguna bisa mengganti tampilan.
+    with st.sidebar:
+        theme_mode = st.selectbox(
+            "🎨 Tema Tampilan",
+            ["Ikuti Tema Pengguna", "Terang", "Gelap"],
+            index=0,
+            help="Pilih Terang/Gelap manual, atau Ikuti Tema Pengguna agar menyesuaikan preferensi perangkat/browser."
+        )
+        st.session_state["theme_mode"] = theme_mode
+
+    load_custom_css(st.session_state.get("theme_mode", "Ikuti Tema Pengguna"))
     
     # --- SIDEBAR ---
     with st.sidebar:
