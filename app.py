@@ -438,10 +438,10 @@ def load_custom_css(theme_mode="Ikuti Tema Pengguna"):
     }}
 
 
-    /* HTML fallback table untuk dark mode: lebih aman daripada canvas st.dataframe */
+    /* HTML table: aman untuk mode terang, gelap, dan auto */
     .theme-table-scroll {{
         background: var(--card-bg) !important;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+        box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-main) 4%, transparent);
     }}
 
     .theme-html-table {{
@@ -456,8 +456,8 @@ def load_custom_css(theme_mode="Ikuti Tema Pengguna"):
         position: sticky;
         top: 0;
         z-index: 2;
-        background: #020617 !important;
-        color: #f8fafc !important;
+        background: var(--card-bg-2) !important;
+        color: var(--text-main) !important;
         border-bottom: 1px solid var(--border-theme) !important;
         padding: 10px 12px;
         text-align: left;
@@ -466,31 +466,31 @@ def load_custom_css(theme_mode="Ikuti Tema Pengguna"):
     }}
 
     .theme-html-table tbody th {{
-        background: #0f172a !important;
-        color: #cbd5e1 !important;
-        border-bottom: 1px solid rgba(148,163,184,0.14) !important;
+        background: var(--card-bg-2) !important;
+        color: var(--text-muted) !important;
+        border-bottom: 1px solid var(--border-theme) !important;
         padding: 9px 12px;
         font-weight: 600;
         white-space: nowrap;
     }}
 
     .theme-html-table td {{
-        background: #111827 !important;
-        color: #f8fafc !important;
-        border-bottom: 1px solid rgba(148,163,184,0.14) !important;
+        background: var(--card-bg) !important;
+        color: var(--text-main) !important;
+        border-bottom: 1px solid var(--border-theme) !important;
         padding: 9px 12px;
         white-space: nowrap;
     }}
 
     .theme-html-table tbody tr:nth-child(even) td,
     .theme-html-table tbody tr:nth-child(even) th {{
-        background: #0f172a !important;
+        background: color-mix(in srgb, var(--card-bg-2) 72%, var(--card-bg)) !important;
     }}
 
     .theme-html-table tbody tr:hover td,
     .theme-html-table tbody tr:hover th {{
-        background: #1e293b !important;
-        color: #ffffff !important;
+        background: color-mix(in srgb, var(--accent-1) 16%, var(--card-bg)) !important;
+        color: var(--text-main) !important;
     }}
 
     /* Tabs */
@@ -674,40 +674,28 @@ def apply_table_theme(styler, gradient_subset=None, cmap="Blues"):
 
 
 def render_theme_table(df_to_show, formatters=None, gradient_subset=None, cmap="Blues", height=360, use_container_width=True):
-    """Render tabel yang benar-benar terbaca pada mode gelap.
+    """Render tabel HTML agar tidak blank di Streamlit Cloud.
 
-    Streamlit st.dataframe memakai canvas pada beberapa versi, sehingga CSS tidak selalu
-    bisa mengubah warna teks di dalam tabel. Untuk mode gelap, fungsi ini memakai HTML
-    table biasa agar warna header, isi, border, dan scrollbar konsisten.
+    Alasan: st.dataframe memakai canvas/grid internal. Pada beberapa theme custom,
+    isi tabel bisa terlihat putih/kosong. HTML table lebih stabil karena seluruh
+    warna dikontrol lewat CSS token tema.
     """
-    current_theme = st.session_state.get("theme_mode", "Ikuti Tema Pengguna")
-    is_dark = current_theme in ["Gelap", "Ikuti Tema Pengguna"]
+    styled_df = df_to_show.copy()
 
-    if is_dark:
-        styled_df = df_to_show.copy()
-        if formatters:
-            for col, fmt in formatters.items():
-                if col in styled_df.columns:
-                    if callable(fmt):
-                        styled_df[col] = styled_df[col].apply(fmt)
-                    elif isinstance(fmt, str):
-                        styled_df[col] = styled_df[col].apply(lambda x, f=fmt: f.format(x))
+    if formatters:
+        for col, fmt in formatters.items():
+            if col in styled_df.columns:
+                if callable(fmt):
+                    styled_df[col] = styled_df[col].apply(fmt)
+                elif isinstance(fmt, str):
+                    styled_df[col] = styled_df[col].apply(lambda x, f=fmt: f.format(x))
 
-        html_table = styled_df.to_html(escape=False, index=True, classes="theme-html-table")
-        st.markdown(f"""
-        <div class="theme-table-scroll" style="max-height:{height}px; overflow:auto; border-radius:14px; border:1px solid var(--border-theme);">
-            {html_table}
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        styler = df_to_show.style
-        if formatters:
-            styler = styler.format(formatters)
-        st.dataframe(
-            apply_table_theme(styler, gradient_subset=gradient_subset, cmap=cmap),
-            use_container_width=use_container_width,
-            height=height
-        )
+    html_table = styled_df.to_html(escape=False, index=True, classes="theme-html-table")
+    st.markdown(f"""
+    <div class="theme-table-scroll" style="max-height:{height}px; overflow:auto; border-radius:14px; border:1px solid var(--border-theme);">
+        {html_table}
+    </div>
+    """, unsafe_allow_html=True)
 
 # ==========================================
 # ANALYSIS FUNCTIONS
